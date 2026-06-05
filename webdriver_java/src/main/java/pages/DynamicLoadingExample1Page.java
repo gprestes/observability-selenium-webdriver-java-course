@@ -6,6 +6,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import java.time.Duration;
 
 import java.time.Duration;
 
@@ -22,7 +23,7 @@ public class DynamicLoadingExample1Page {
 
     public void clickStart(){
         driver.findElement(startButton).click();
-        WebDriverWait wait = new WebDriverWait(driver, 5);
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
         wait.until(ExpectedConditions.invisibilityOf(
                 driver.findElement(loadingIndicator)));
 

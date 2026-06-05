@@ -4,31 +4,28 @@ import com.google.common.io.Files;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.support.events.EventFiringWebDriver;
+import org.openqa.selenium.support.events.EventFiringDecorator;
 import org.testng.ITestResult;
 import org.testng.annotations.*;
 import pages.HomePage;
 import utils.CookieManager;
 import utils.EventReporter;
 import utils.WindowManager;
+import io.github.bonigarcia.wdm.WebDriverManager;
 
 import java.io.File;
 import java.io.IOException;
 
 public class BaseTests {
 
-    private EventFiringWebDriver driver;
+    private WebDriver driver;
     protected HomePage homePage;
 
     @BeforeClass
     public void setUp(){
-        var driverExtention = "";
-        if(System.getenv("RUNNER_OS") != null) {
-            driverExtention = "-linux";
-        };
-        System.setProperty("webdriver.chrome.driver", "resources/chromedriver" + driverExtention);
-        driver = new EventFiringWebDriver(new ChromeDriver(getChromeOptions()));
-        driver.register(new EventReporter());
+        WebDriverManager.chromedriver().setup();
+        driver = new EventFiringDecorator(new EventReporter())
+                    .decorate(new ChromeDriver(getChromeOptions()));
     }
 
     @BeforeMethod
@@ -46,11 +43,11 @@ public class BaseTests {
     public void recordFailure(ITestResult result){
         if(ITestResult.FAILURE == result.getStatus())
         {
-            var camera = (TakesScreenshot)driver;
+            var camera = (TakesScreenshot) driver;
             File screenshot = camera.getScreenshotAs(OutputType.FILE);
-            try{
+            try {
                 Files.move(screenshot, new File("resources/screenshots/" + result.getName() + ".png"));
-            }catch(IOException e){
+            } catch(IOException e) {
                 e.printStackTrace();
             }
         }
@@ -64,9 +61,10 @@ public class BaseTests {
         ChromeOptions options = new ChromeOptions();
         options.addArguments("disable-infobars");
 
-        // Default headless mode off, set to true based on env var
-        var headless = Boolean.parseBoolean(System.getenv("HEADLESS_CHROME")) | false;
-        options.setHeadless(headless);
+        var headless = Boolean.parseBoolean(System.getenv("HEADLESS_CHROME"));
+        if (headless) {
+            options.addArguments("--headless=new");
+        }
         return options;
     }
 
